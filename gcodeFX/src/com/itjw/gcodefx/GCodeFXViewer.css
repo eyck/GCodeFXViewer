@@ -1,0 +1,31 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 28.03.2014, 23:11:29
+    Author     : Michael Hoffer &lt;info@michaelhoffer.de&gt;
+*/
+
+.command {
+    -fx-fill: purple;
+    -fx-font-weight: bold;
+}
+
+.parameter {
+    -fx-fill: darkgreen;
+    -fx-font-weight: bold;
+}
+
+.string {
+    -fx-fill: blue;
+}
+
+.comment {
+	-fx-fill: cadetblue;
+}
+
+.paragraph-box:has-caret {
+    -fx-background-color: #f2f9fc;
+}
