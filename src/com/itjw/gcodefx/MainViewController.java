@@ -39,6 +39,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.AmbientLight;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.PointLight;
@@ -101,7 +102,7 @@ public class MainViewController implements Initializable {
 	final PointLight light2 = new PointLight(Color.ANTIQUEWHITE);
 	final PointLight light3 = new PointLight(Color.ALICEBLUE);
 
-	final Xform printerSpace = new Xform();
+	final Group printerSpace = new Group();
 	{
 		printerSpace.setId("printerSpace");
 	}
@@ -183,7 +184,7 @@ public class MainViewController implements Initializable {
 		viewContainer.getChildren().add(subScene);
 	}
 
-	private static class GcodeParseService extends Service<List<Xform>> {
+	private static class GcodeParseService extends Service<List<Layer>> {
 		private final String code;
 		private final JavaFXMachineProcessor jfxProcessor;
 
@@ -193,9 +194,9 @@ public class MainViewController implements Initializable {
 			this.code = code;
 		}
 
-		protected Task<List<Xform>> createTask() {
-			return new Task<List<Xform>>() {
-				protected List<Xform> call() throws IOException {
+		protected Task<List<Layer>> createTask() {
+			return new Task<List<Layer>>() {
+				protected List<Layer> call() throws IOException {
 					List<AbstractGCode> gcodes = GCodeReader.parseStrings(code);
 					if(gcodes != null){
 	                    updateMessage("Generating 3D objects");

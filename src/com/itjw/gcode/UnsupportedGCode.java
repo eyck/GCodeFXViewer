@@ -11,4 +11,7 @@ public class UnsupportedGCode extends AbstractGCode {
 		machine.finishCommand(this);
 		return false;
 	}
+
+	protected void parseTokens(String[] tokens, int lineNr) {
+	}
 }

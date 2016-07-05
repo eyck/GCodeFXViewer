@@ -80,6 +80,7 @@ public class SettingsController implements Initializable {
     public Accordion settings;
     public ColorPicker ambientColorPicker;
     public CheckBox showAxisCheckBox;
+    public CheckBox showViewCrossCheckBox;
     public CheckBox yUpCheckBox;
     public Slider fovSlider;
     public CheckBox msaaCheckBox;
@@ -133,6 +134,7 @@ public class SettingsController implements Initializable {
         // wire up settings in OPTIONS
         contentModel.msaaProperty().bind(msaaCheckBox.selectedProperty());
         contentModel.showAxisProperty().bind(showAxisCheckBox.selectedProperty());
+        contentModel.showViewCrossProperty().bind(showViewCrossCheckBox.selectedProperty());
         contentModel.yUpProperty().bind(yUpCheckBox.selectedProperty());
         backgroundColorPicker.setValue((Color)contentModel.getSubScene().getFill());
         contentModel.getSubScene().fillProperty().bind(backgroundColorPicker.valueProperty());

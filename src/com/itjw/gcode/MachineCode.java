@@ -12,4 +12,6 @@ public class MachineCode extends AbstractGCode {
 		return false;
 	}
 
+	protected void parseTokens(String[] tokens, int lineNr) {
+	}
 }

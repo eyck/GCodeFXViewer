@@ -11,4 +11,6 @@ public class Comment extends AbstractGCode {
 		return false;
 	}
 
+	protected void parseTokens(String[] tokens, int lineNr) {
+	}
 }

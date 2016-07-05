@@ -47,8 +47,6 @@ public class Frame extends Duration {
     // 0.0000001f was too small on a trial run
     static double EPSILON = 0.000001;
 
-    // static double EPSILON = 0.0;
-    
     Frame(double millis) {
         super(millis);
     }

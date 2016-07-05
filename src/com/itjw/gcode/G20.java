@@ -13,4 +13,6 @@ public class G20 extends AbstractGCode {
 		return false;
 	}
 
+	protected void parseTokens(String[] tokens, int lineNr) {
+	}
 }

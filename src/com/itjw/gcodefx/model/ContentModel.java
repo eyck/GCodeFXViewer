@@ -69,7 +69,8 @@ import javafx.scene.transform.Translate;
  * 3D Content Model for Viewer App. Contains the 3D scene and everything related to it: light, cameras etc.
  */
 public class ContentModel {
-	private final Double HIGHLITE_EXPAND=1.5;
+	private final int HIGHLITE_DENOM=3;
+	private final int HIGHLITE_NUMER=2;
 	private final SimpleObjectProperty<SubScene> subScene = new SimpleObjectProperty<>();
 	private final Group root3D = new Group();
 	private final PerspectiveCamera camera = new PerspectiveCamera(true);
@@ -83,11 +84,15 @@ public class ContentModel {
 	private final Xform cameraXform2 = new Xform();
 	private final Xform cameraXform3 = new Xform();
 	private final double cameraDistance = 200;
+	private final PhongMaterial redMaterial = createMaterial(Color.DARKRED, Color.RED);
+	private final PhongMaterial greenMaterial = createMaterial(Color.DARKGREEN, Color.GREEN);
+	private final PhongMaterial blueMaterial = createMaterial(Color.DARKBLUE, Color.BLUE);
 	private ObjectProperty<Node> content = new SimpleObjectProperty<>();
 	private ObjectProperty<Node> highlite = new SimpleObjectProperty<>();
 	private Map<Shape3D, Material> materialMap=new HashMap<>();
 	private AutoScalingGroup autoScalingGroup = new AutoScalingGroup(2);
 	private Box xAxis, yAxis, zAxis;
+	private Box xViewCrossAxis, yViewCrossAxis, zViewCrossAxis;
 	private Sphere xSphere, ySphere, zSphere;
 	private AmbientLight ambientLight = new AmbientLight(Color.DARKGREY);
 	private PointLight light1 = new PointLight(Color.WHITE);
@@ -145,6 +150,16 @@ public class ContentModel {
 			}
 		}
 	};
+	private SimpleBooleanProperty showViewCross = new SimpleBooleanProperty(false){
+		@Override protected void invalidated() {
+			if (get()) {
+				if (xViewCrossAxis == null) createViewCross();
+				autoScalingGroup.getChildren().addAll(xViewCrossAxis, yViewCrossAxis, zViewCrossAxis);
+			} else if (xAxis != null) {
+				autoScalingGroup.getChildren().removeAll(xViewCrossAxis, yViewCrossAxis, zViewCrossAxis);
+			}
+		}
+	};
 	private Rotate yUpRotate = new Rotate(0,0,0,0,Rotate.X_AXIS);
 	private SimpleBooleanProperty yUp = new SimpleBooleanProperty(true){
 		@Override protected void invalidated() {
@@ -169,13 +184,10 @@ public class ContentModel {
 	private double mouseDeltaY;
 
 	private final EventHandler<MouseEvent> mouseEventHandler = event -> {
-		// System.out.println("MouseEvent ...");
-
 		double yFlip = 1.0;
 		if (getYUp()) {
 			yFlip = 1.0;
-		}
-		else {
+		} else {
 			yFlip = -1.0;
 		}
 		if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
@@ -239,23 +251,12 @@ public class ContentModel {
 		}
 	};
 	private final EventHandler<KeyEvent> keyEventHandler = event -> {
-		/*
-        if (!Double.isNaN(event.getZoomFactor()) && event.getZoomFactor() > 0.8 && event.getZoomFactor() < 1.2) {
-            double z = cameraPosition.getZ()/event.getZoomFactor();
-            z = Math.max(z,-1000);
-            z = Math.min(z,0);
-            cameraPosition.setZ(z);
-        }
-		 */
 /*		Timeline timeline = getTimeline();
-		Duration currentTime;
-*/		double CONTROL_MULTIPLIER = 0.1;
+		Duration currentTime; */
+		double CONTROL_MULTIPLIER = 0.1;
 		double SHIFT_MULTIPLIER = 0.1;
 		double ALT_MULTIPLIER = 0.5;
-		//System.out.println("--> handleKeyboard>handle");
-
-		// event.getEventType();
-
+		
 		switch (event.getCode()) {
 		case Z:
 			resetCamera(event.isShiftDown());
@@ -349,9 +350,6 @@ public class ContentModel {
 		default:
 			break;
 		}
-		//System.out.println(cameraXform.getTranslateX() + ", " + cameraXform.getTranslateY() + ", " + cameraXform.getTranslateZ());
-
-
 	};
 	
 	public void resetCamera(Boolean fullReset) {
@@ -380,8 +378,6 @@ public class ContentModel {
 
 		camera.getTransforms().addAll(
 				yUpRotate,
-				//cameraXRotate,
-				//cameraYRotate,
 				cameraPosition,
 				cameraLookXRotate,
 				cameraLookZRotate);
@@ -391,13 +387,11 @@ public class ContentModel {
 			yUpRotate.setAngle(0);
 		}
 
-		//root3D.getChildren().add(camera);
 		root3D.getChildren().add(cameraXform1);
 		cameraXform1.getChildren().add(cameraXform2);
 		cameraXform2.getChildren().add(cameraXform3);
 		cameraXform3.getChildren().add(camera);
 		cameraPosition.setZ(-cameraDistance);
-		// camera.setTranslateZ(-cameraDistance);
 		root3D.getChildren().add(autoScalingGroup);
 		// Build SubScene
 		rebuildSubScene();
@@ -417,26 +411,12 @@ public class ContentModel {
 		SubScene subScene = new SubScene(root3D,400,400,true,aaVal);
 		this.subScene.set(subScene);
 		subScene.setFill(Color.TRANSPARENT);
-		//subScene.setFill(Color.WHITE);
 		subScene.setCamera(camera);
 		// SCENE EVENT HANDLING FOR CAMERA NAV
 		subScene.addEventHandler(MouseEvent.ANY, mouseEventHandler);
 		subScene.addEventHandler(KeyEvent.ANY, keyEventHandler);
-		// subScene.addEventFilter(KeyEvent.ANY, keyEventHandler);
 		subScene.addEventHandler(ZoomEvent.ANY, zoomEventHandler);
 		subScene.addEventHandler(ScrollEvent.ANY, scrollEventHandler);
-
-		// Scene scene = subScene.getScene();
-		// scene.addEventFilter(KeyEvent.ANY, keyEventHandler);
-
-		/*
-        subScene.sceneProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ov, Object t, Object t1) {
-                System.out.println("hello world");
-            }
-        });
-		 */
 	}
 
 	public boolean getAmbientLightEnabled() {
@@ -527,6 +507,18 @@ public class ContentModel {
 		this.showAxis.set(showAxis);
 	}
 
+	public boolean getShowViewCross() {
+		return showViewCross.get();
+	}
+
+	public SimpleBooleanProperty showViewCrossProperty() {
+		return showViewCross;
+	}
+
+	public void setShowViewCross(boolean showViewCross) {
+		this.showViewCross.set(showViewCross);
+	}
+
 	public AutoScalingGroup getAutoScalingGroup() {
 		return autoScalingGroup;
 	}
@@ -552,7 +544,7 @@ public class ContentModel {
 			Shape3D shape = (Shape3D) n;
 			materialMap.put(shape, shape.getMaterial());
 			shape.setMaterial(highliteMaterial);
-			if(shape instanceof Cylinder) ((Cylinder)shape).setRadius(((Cylinder)shape).getRadius()*HIGHLITE_EXPAND);
+			modifySize(shape, HIGHLITE_DENOM, HIGHLITE_NUMER);
 		} else if(n instanceof Parent){
 			for(Node nn:((Parent) n).getChildrenUnmodifiable()){
 				ContentModel.this.processNode.accept(nn);
@@ -564,12 +556,19 @@ public class ContentModel {
 			if(oldContent!=null){
 				for(Map.Entry<Shape3D, Material> entry: materialMap.entrySet()){
 					entry.getKey().setMaterial(entry.getValue());
-					if(entry.getKey() instanceof Cylinder) ((Cylinder)entry.getKey()).setRadius(((Cylinder)entry.getKey()).getRadius()/HIGHLITE_EXPAND);
+					modifySize(entry.getKey(), HIGHLITE_NUMER, HIGHLITE_DENOM);
 				}
 			}
 			materialMap.clear();
 			if(newContent!=null) processNode.accept(newContent);
 		});
+	}
+
+	private void modifySize(Shape3D shape, int denominator, int numerator) {
+		if(shape instanceof Cylinder)
+			((Cylinder)shape).setRadius( denominator * ((Cylinder)shape).getRadius() / numerator);
+		else if(shape instanceof Sphere)
+			((Sphere)shape).setRadius(denominator * ((Sphere)shape).getRadius() / numerator);
 	}
 
 	public boolean getMsaa() {
@@ -627,14 +626,22 @@ public class ContentModel {
 		return blueMaterial;
 	}
 
+	private void createViewCross(){
+		double length = 5.0;
+		double width = 0.1;
+		double radius = 2.0;
+		xViewCrossAxis = new Box(length, width, width);
+		yViewCrossAxis = new Box(width, length, width);
+		zViewCrossAxis = new Box(width, width, length);
+		xViewCrossAxis.setMaterial(redMaterial);
+		yViewCrossAxis.setMaterial(greenMaterial);
+		zViewCrossAxis.setMaterial(blueMaterial);
+
+	}
 	private void createAxes() {
 		double length = 240.0;
 		double width = 0.2;
 		double radius = 2.0;
-
-		final PhongMaterial redMaterial = createMaterial(Color.DARKRED, Color.RED);
-		final PhongMaterial greenMaterial = createMaterial(Color.DARKGREEN, Color.GREEN);
-		final PhongMaterial blueMaterial = createMaterial(Color.DARKBLUE, Color.BLUE);
 
 		xSphere = new Sphere(radius);
 		ySphere = new Sphere(radius);
