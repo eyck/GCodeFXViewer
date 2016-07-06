@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.itjw.gcode.AbstractGCode;
 import com.itjw.gcodefx.Xform;
 
 import javafx.animation.Timeline;
@@ -69,20 +70,16 @@ import javafx.scene.transform.Translate;
  * 3D Content Model for Viewer App. Contains the 3D scene and everything related to it: light, cameras etc.
  */
 public class ContentModel {
-	private final int HIGHLITE_DENOM=3;
-	private final int HIGHLITE_NUMER=2;
+	private final int HIGHLITE_DENOM=11;
+	private final int HIGHLITE_NUMER=10;
 	private final SimpleObjectProperty<SubScene> subScene = new SimpleObjectProperty<>();
+	private final SimpleObjectProperty<AbstractGCode> selectedGcode = new SimpleObjectProperty<>();
 	private final Group root3D = new Group();
 	private final PerspectiveCamera camera = new PerspectiveCamera(true);
-	private final Rotate cameraXRotate = new Rotate(-20,0,0,0,Rotate.X_AXIS);
-	private final Rotate cameraYRotate = new Rotate(-20,0,0,0,Rotate.Y_AXIS);
-	private final Rotate cameraLookXRotate = new Rotate(0,0,0,0,Rotate.X_AXIS);
-	private final Rotate cameraLookZRotate = new Rotate(0,0,0,0,Rotate.Z_AXIS);
 	private final Translate cameraPosition = new Translate(0,0,0);
-	private final Translate contentPosition = new Translate(0,0,0);
-	private final Xform cameraXform1 = new Xform();
-	private final Xform cameraXform2 = new Xform();
-	private final Xform cameraXform3 = new Xform();
+	private final Translate contentTranslate = new Translate(0,0,0);
+	private final Xform cameraRotate = new Xform();
+	private final Xform cameraTranslate = new Xform();
 	private final double cameraDistance = 200;
 	private final PhongMaterial redMaterial = createMaterial(Color.DARKRED, Color.RED);
 	private final PhongMaterial greenMaterial = createMaterial(Color.DARKGREEN, Color.GREEN);
@@ -182,6 +179,7 @@ public class ContentModel {
 	private double mouseOldY;
 	private double mouseDeltaX;
 	private double mouseDeltaY;
+	Node picked =null;
 
 	private final EventHandler<MouseEvent> mouseEventHandler = event -> {
 		double yFlip = 1.0;
@@ -191,6 +189,8 @@ public class ContentModel {
 			yFlip = -1.0;
 		}
 		if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
+			picked = event.getPickResult().getIntersectedNode();
+			if(!(picked instanceof Shape3D)) picked = null;
 			mousePosX = event.getSceneX();
 			mousePosY = event.getSceneY();
 			mouseOldX = event.getSceneX();
@@ -215,26 +215,30 @@ public class ContentModel {
 
 			if ( event.isPrimaryButtonDown()) {
 				if(event.isShiftDown() && event.isControlDown()){
-					cameraXform1.ry.setAngle(cameraXform1.ry.getAngle() - yFlip*mouseDeltaX*modifierFactor*modifier*2.0);
-					contentPosition.setZ(contentPosition.getZ() - yFlip*mouseDeltaY*modifierFactor*modifier*0.3);  // -					
-				} else if(event.isShiftDown()){
-					contentPosition.setX(contentPosition.getX() - flip*mouseDeltaX*modifierFactor*modifier*0.3);  // -
-					contentPosition.setY(contentPosition.getY() - yFlip*mouseDeltaY*modifierFactor*modifier*0.3);  // -					
-				} else if(event.isControlDown() ) {
-					cameraXform2.t.setX(cameraXform2.t.getX() + flip*mouseDeltaX*modifierFactor*modifier*0.3);  // -
-					cameraXform2.t.setY(cameraXform2.t.getY() + yFlip*mouseDeltaY*modifierFactor*modifier*0.3);  // -
+					cameraRotate.ry.setAngle(cameraRotate.ry.getAngle() - yFlip*mouseDeltaX*modifierFactor*modifier*2.0);
+					contentTranslate.setZ(contentTranslate.getZ() - yFlip*mouseDeltaY*modifierFactor*modifier*0.3);  // -					
+				} else if(event.isControlDown()){
+					contentTranslate.setX(contentTranslate.getX() - flip*mouseDeltaX*modifierFactor*modifier*0.3);  // -
+					contentTranslate.setY(contentTranslate.getY() - yFlip*mouseDeltaY*modifierFactor*modifier*0.3);  // -					
+				} else if(event.isShiftDown() ) {
+					cameraTranslate.t.setX(cameraTranslate.t.getX() + flip*mouseDeltaX*modifierFactor*modifier*0.3);  // -
+					cameraTranslate.t.setY(cameraTranslate.t.getY() + yFlip*mouseDeltaY*modifierFactor*modifier*0.3);  // -
 				} else {
-					cameraXform1.rz.setAngle(cameraXform1.rz.getAngle() + flip*mouseDeltaX*modifierFactor*modifier*2.0);  // -
-					cameraXform1.rx.setAngle(cameraXform1.rx.getAngle() + flip*mouseDeltaY*modifierFactor*modifier*2.0);  // -
+					cameraRotate.rz.setAngle(cameraRotate.rz.getAngle() + flip*mouseDeltaX*modifierFactor*modifier*2.0);  // -
+					cameraRotate.rx.setAngle(cameraRotate.rx.getAngle() + flip*mouseDeltaY*modifierFactor*modifier*2.0);  // -
 				}
 			}
+		} else if (event.getEventType() == MouseEvent.MOUSE_RELEASED && picked!=null) {
+			AbstractGCode gcode = (AbstractGCode) picked.getUserData();
+			if(gcode==null)	gcode = (AbstractGCode)picked.getParent().getUserData();
+			selectedGcode.set(gcode);
 		}
 	};
 	
 	private final EventHandler<ScrollEvent> scrollEventHandler = event -> {
 		if (event.getTouchCount() > 0) { // touch pad scroll
-			cameraXform2.t.setX(cameraXform2.t.getX() - (0.01*event.getDeltaX()));  // -
-			cameraXform2.t.setY(cameraXform2.t.getY() + (0.01*event.getDeltaY()));  // -
+			cameraTranslate.t.setX(cameraTranslate.t.getX() - (0.01*event.getDeltaX()));  // -
+			cameraTranslate.t.setY(cameraTranslate.t.getY() + (0.01*event.getDeltaY()));  // -
 		} else {
 			double z = cameraPosition.getZ()+(event.getDeltaY()*0.2);
 			z = Math.max(z,-1000);
@@ -263,16 +267,16 @@ public class ContentModel {
 			break;
 		case UP:
 			if (event.isControlDown() && event.isShiftDown()) {
-				cameraXform2.t.setY(cameraXform2.t.getY() - 10.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setY(cameraTranslate.t.getY() - 10.0*CONTROL_MULTIPLIER);  
 			}  
 			else if (event.isAltDown() && event.isShiftDown()) {
-				cameraXform1.rx.setAngle(cameraXform1.rx.getAngle() - 10.0*ALT_MULTIPLIER);  
+				cameraRotate.rx.setAngle(cameraRotate.rx.getAngle() - 10.0*ALT_MULTIPLIER);  
 			}
 			else if (event.isControlDown()) {
-				cameraXform2.t.setY(cameraXform2.t.getY() - 1.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setY(cameraTranslate.t.getY() - 1.0*CONTROL_MULTIPLIER);  
 			}
 			else if (event.isAltDown()) {
-				cameraXform1.rx.setAngle(cameraXform1.rx.getAngle() - 2.0*ALT_MULTIPLIER);  
+				cameraRotate.rx.setAngle(cameraRotate.rx.getAngle() - 2.0*ALT_MULTIPLIER);  
 			}
 			else if (event.isShiftDown()) {
 				double z = camera.getTranslateZ();
@@ -282,16 +286,16 @@ public class ContentModel {
 			break;
 		case DOWN:
 			if (event.isControlDown() && event.isShiftDown()) {
-				cameraXform2.t.setY(cameraXform2.t.getY() + 10.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setY(cameraTranslate.t.getY() + 10.0*CONTROL_MULTIPLIER);  
 			}  
 			else if (event.isAltDown() && event.isShiftDown()) {
-				cameraXform1.rx.setAngle(cameraXform1.rx.getAngle() + 10.0*ALT_MULTIPLIER);  
+				cameraRotate.rx.setAngle(cameraRotate.rx.getAngle() + 10.0*ALT_MULTIPLIER);  
 			}
 			else if (event.isControlDown()) {
-				cameraXform2.t.setY(cameraXform2.t.getY() + 1.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setY(cameraTranslate.t.getY() + 1.0*CONTROL_MULTIPLIER);  
 			}
 			else if (event.isAltDown()) {
-				cameraXform1.rx.setAngle(cameraXform1.rx.getAngle() + 2.0*ALT_MULTIPLIER);  
+				cameraRotate.rx.setAngle(cameraRotate.rx.getAngle() + 2.0*ALT_MULTIPLIER);  
 			}
 			else if (event.isShiftDown()) {
 				double z = camera.getTranslateZ();
@@ -301,13 +305,13 @@ public class ContentModel {
 			break;
 		case RIGHT:
 			if (event.isControlDown() && event.isShiftDown()) {
-				cameraXform2.t.setX(cameraXform2.t.getX() + 10.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setX(cameraTranslate.t.getX() + 10.0*CONTROL_MULTIPLIER);  
 			}  
 			else if (event.isAltDown() && event.isShiftDown()) {
-				cameraXform1.ry.setAngle(cameraXform1.ry.getAngle() - 10.0*ALT_MULTIPLIER);  
+				cameraRotate.ry.setAngle(cameraRotate.ry.getAngle() - 10.0*ALT_MULTIPLIER);  
 			}
 			else if (event.isControlDown()) {
-				cameraXform2.t.setX(cameraXform2.t.getX() + 1.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setX(cameraTranslate.t.getX() + 1.0*CONTROL_MULTIPLIER);  
 			}
 /*			else if (event.isShiftDown()) {
 				currentTime = timeline.getCurrentTime();
@@ -315,7 +319,7 @@ public class ContentModel {
 				// timeline.jumpTo(Duration.seconds(currentTime.toSeconds() + ONE_FRAME));
 			}
 */			else if (event.isAltDown()) {
-				cameraXform1.ry.setAngle(cameraXform1.ry.getAngle() - 2.0*ALT_MULTIPLIER);  
+				cameraRotate.ry.setAngle(cameraRotate.ry.getAngle() - 2.0*ALT_MULTIPLIER);  
 			}
 /*			else {
 				currentTime = timeline.getCurrentTime();
@@ -325,13 +329,13 @@ public class ContentModel {
 */			break;
 		case LEFT:
 			if (event.isControlDown() && event.isShiftDown()) {
-				cameraXform2.t.setX(cameraXform2.t.getX() - 10.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setX(cameraTranslate.t.getX() - 10.0*CONTROL_MULTIPLIER);  
 			}  
 			else if (event.isAltDown() && event.isShiftDown()) {
-				cameraXform1.ry.setAngle(cameraXform1.ry.getAngle() + 10.0*ALT_MULTIPLIER);  // -
+				cameraRotate.ry.setAngle(cameraRotate.ry.getAngle() + 10.0*ALT_MULTIPLIER);  // -
 			}
 			else if (event.isControlDown()) {
-				cameraXform2.t.setX(cameraXform2.t.getX() - 1.0*CONTROL_MULTIPLIER);  
+				cameraTranslate.t.setX(cameraTranslate.t.getX() - 1.0*CONTROL_MULTIPLIER);  
 			}
 /*			else if (event.isShiftDown()) {
 				currentTime = timeline.getCurrentTime();
@@ -339,7 +343,7 @@ public class ContentModel {
 				// timeline.jumpTo(Duration.seconds(currentTime.toSeconds() - ONE_FRAME));
 			}
 */			else if (event.isAltDown()) {
-				cameraXform1.ry.setAngle(cameraXform1.ry.getAngle() + 2.0*ALT_MULTIPLIER);  // -
+				cameraRotate.ry.setAngle(cameraRotate.ry.getAngle() + 2.0*ALT_MULTIPLIER);  // -
 			}
 /*			else {
 				currentTime = timeline.getCurrentTime();
@@ -354,9 +358,9 @@ public class ContentModel {
 	
 	public void resetCamera(Boolean fullReset) {
 		if (fullReset) {
-			cameraXform1.ry.setAngle(0.0);
-			cameraXform1.rx.setAngle(0.0);
-			cameraXform1.rz.setAngle(0.0);
+			cameraRotate.ry.setAngle(0.0);
+			cameraRotate.rx.setAngle(0.0);
+			cameraRotate.rz.setAngle(0.0);
 			if (yUp.get()) {
 				yUpRotate.setAngle(180);
 			} else {
@@ -364,11 +368,11 @@ public class ContentModel {
 			}
 			cameraPosition.setZ(-cameraDistance);
 		}   
-		cameraXform2.t.setX(0d);
-		cameraXform2.t.setY(0d);
-		contentPosition.setX(0d);  // -
-		contentPosition.setY(0d);  // -					
-		contentPosition.setZ(0d);  // -					
+		cameraTranslate.t.setX(0d);
+		cameraTranslate.t.setY(0d);
+		contentTranslate.setX(0d);  // -
+		contentTranslate.setY(0d);  // -					
+		contentTranslate.setZ(0d);  // -					
 	}
 
 	public ContentModel() {
@@ -376,21 +380,16 @@ public class ContentModel {
 		camera.setNearClip(1.0); // TODO: Workaround as per RT-31255
 		camera.setFarClip(10000.0); // TODO: Workaround as per RT-31255
 
-		camera.getTransforms().addAll(
-				yUpRotate,
-				cameraPosition,
-				cameraLookXRotate,
-				cameraLookZRotate);
+		camera.getTransforms().addAll(yUpRotate, cameraPosition);
 		if (yUp.get()) {
 			yUpRotate.setAngle(180);
 		} else {
 			yUpRotate.setAngle(0);
 		}
 
-		root3D.getChildren().add(cameraXform1);
-		cameraXform1.getChildren().add(cameraXform2);
-		cameraXform2.getChildren().add(cameraXform3);
-		cameraXform3.getChildren().add(camera);
+		root3D.getChildren().add(cameraRotate);
+		cameraRotate.getChildren().add(cameraTranslate);
+		cameraTranslate.getChildren().add(camera);
 		cameraPosition.setZ(-cameraDistance);
 		root3D.getChildren().add(autoScalingGroup);
 		// Build SubScene
@@ -531,10 +530,16 @@ public class ContentModel {
 		contentProperty().addListener((ObservableValue<? extends Node> ov, Node oldContent, Node newContent) -> {
 			autoScalingGroup.getChildren().remove(oldContent);
 			autoScalingGroup.getChildren().add(newContent);
-			newContent.getTransforms().add(contentPosition);
+			newContent.getTransforms().add(contentTranslate);
 		});
 	}
 
+	public void setViewPoint(Double x, Double y, Double z){
+		if(x!=null) contentTranslate.setX(x);
+		if(y!=null) contentTranslate.setY(y);
+		if(z!=null) contentTranslate.setZ(z);
+	}
+	
 	public ObjectProperty<Node> highlightProperty() { return highlite; }
 	public Node getHighlight() { return highlite.get(); }
 	public void setHighlight(Node content) { this.highlite.set(content); }
@@ -591,6 +596,14 @@ public class ContentModel {
 		return subScene;
 	}
 
+	public AbstractGCode getSelectedGcode() {
+		return selectedGcode.get();
+	}
+
+	public SimpleObjectProperty<AbstractGCode> selectedGcodeProperty() {
+		return selectedGcode;
+	}
+
 	public Group getRoot3D() {
 		return root3D;
 	}
@@ -599,26 +612,16 @@ public class ContentModel {
 		return camera;
 	}
 
-	public Rotate getCameraXRotate() {
-		return cameraXRotate;
-	}
-
-	public Rotate getCameraYRotate() {
-		return cameraYRotate;
-	}
-
 	public Translate getCameraPosition() {
 		return cameraPosition;
 	}
 
-	public Rotate getCameraLookXRotate() {
-		return cameraLookXRotate;
+	public Xform getCameraRotate() {
+		return cameraRotate;
 	}
-
-	public Rotate getCameraLookZRotate() {
-		return cameraLookZRotate;
+	public Xform getCameraTranslate() {
+		return cameraTranslate;
 	}
-
 	private PhongMaterial createMaterial(Color diffuse, Color specular) {
 		final PhongMaterial blueMaterial = new PhongMaterial();
 		blueMaterial.setDiffuseColor(diffuse);
@@ -629,7 +632,7 @@ public class ContentModel {
 	private void createViewCross(){
 		double length = 5.0;
 		double width = 0.1;
-		double radius = 2.0;
+		//double radius = 2.0;
 		xViewCrossAxis = new Box(length, width, width);
 		yViewCrossAxis = new Box(width, length, width);
 		zViewCrossAxis = new Box(width, width, length);
@@ -664,12 +667,12 @@ public class ContentModel {
 		yAxis.setMaterial(greenMaterial);
 		zAxis.setMaterial(blueMaterial);
 		
-		xSphere.getTransforms().add(contentPosition);
-		ySphere.getTransforms().add(contentPosition);
-		zSphere.getTransforms().add(contentPosition);
-		xAxis.getTransforms().add(contentPosition);
-		yAxis.getTransforms().add(contentPosition);
-		zAxis.getTransforms().add(contentPosition);
+		xSphere.getTransforms().add(contentTranslate);
+		ySphere.getTransforms().add(contentTranslate);
+		zSphere.getTransforms().add(contentTranslate);
+		xAxis.getTransforms().add(contentTranslate);
+		yAxis.getTransforms().add(contentTranslate);
+		zAxis.getTransforms().add(contentTranslate);
 	}
 
 }

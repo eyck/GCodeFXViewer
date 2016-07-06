@@ -56,6 +56,7 @@ import org.reactfx.EventStreams;
 import com.itjw.gcode.AbstractGCode;
 import com.itjw.gcode.GCodeReader;
 import com.itjw.gcodefx.Xform.RotateOrder;
+import com.itjw.gcodefx.model.ContentModel;
 
 import javafx.application.Application.Parameters;
 import javafx.beans.value.ObservableValue;
@@ -116,8 +117,8 @@ public class MainViewController implements Initializable {
 	@FXML
 	private AnchorPane settingsContainer;
 
-	private Accordion settingsPanel;
-
+	private SettingsController settingsController;
+	
 	private final CodeArea codeArea = new CodeArea();
 
 	private SubScene subScene;
@@ -151,7 +152,9 @@ public class MainViewController implements Initializable {
 
 		try {
 			// CREATE SETTINGS PANEL
-			settingsPanel = FXMLLoader.load(MainViewController.class.getResource("settings.fxml"));
+			FXMLLoader fxmlLoader = new FXMLLoader(GCodeFXViewer.class.getResource("settings.fxml"));
+			Accordion settingsPanel = fxmlLoader.load();
+			settingsController = fxmlLoader.getController();
 			// SETUP SPLIT PANE
 			settingsContainer.getChildren().add(settingsPanel);
 			AnchorPane.setLeftAnchor(settingsPanel, 0d);
@@ -200,9 +203,20 @@ public class MainViewController implements Initializable {
 		editorContainer.setContent(codeArea);
 		// setup the 3D view area
 		setSubScene();
-		GCodeFXViewer.getContentModel().subSceneProperty().addListener((ov, oldVal, newVal)->{
+		final ContentModel contentModel = GCodeFXViewer.getContentModel();
+		contentModel.subSceneProperty().addListener((ov, oldVal, newVal)->{
 			viewContainer.getChildren().clear();	
 			setSubScene();			
+		});
+		contentModel.selectedGcodeProperty().addListener((ov, oldVal, newVal)->{
+			if(newVal!=null)
+				codeArea.moveTo(codeArea.position(newVal.getLineNo()-1, 0).toOffset());
+		});
+		settingsController.firstLayerProperty().addListener((ov, oldVal, newVal)->{
+			updateLayerVisibility();
+		});
+		settingsController.lastLayerProperty().addListener((ov, oldVal, newVal)->{
+			updateLayerVisibility();
 		});
 	}
 
@@ -213,6 +227,16 @@ public class MainViewController implements Initializable {
 		viewContainer.getChildren().add(subScene);
 	}
 
+	private void updateLayerVisibility(){
+		int i=1;
+		double first = settingsController.getFirstLayer();
+		double last = settingsController.getLastLayer();
+		for(Node n: printerSpace.getChildren()){
+			n.setVisible(i>=first && i<=last);
+			i++;
+		}
+	}
+	
 	private static class GcodeParseService extends Service<List<Layer>> {
 		private final String code;
 		private final JavaFXMachineProcessor jfxProcessor;
@@ -246,6 +270,7 @@ public class MainViewController implements Initializable {
 	private void compile(final String code) {
 		logView.setText("");
 		printerSpace.getChildren().clear();
+		jfxProcessor.initialize();
 		GcodeParseService service = new GcodeParseService(jfxProcessor,code);
 		service.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
 			@SuppressWarnings("unchecked")
@@ -254,7 +279,15 @@ public class MainViewController implements Initializable {
 				Object res = t.getSource().getValue();
 				if(res!=null && res instanceof List<?>){
 					printerSpace.getChildren().addAll((List<? extends Node>)res);
-					GCodeFXViewer.getContentModel().setContent(printerSpace);
+					Double dim[] = jfxProcessor.plateDimensions;
+					ContentModel contentModel = GCodeFXViewer.getContentModel();
+					contentModel.setContent(printerSpace);
+					contentModel.setViewPoint(-dim[0]/2, -dim[1]/2, 0d);
+					contentModel.getCameraPosition().setZ(-dim[2]*2.5);
+					contentModel.getCameraRotate().rx.setAngle(30);
+					int count = printerSpace.getChildren().size()+1;
+					settingsController.setFirstLayerValues(count, 1);
+					settingsController.setLastLayerValues(count, count);
 				}
 			}
 		});

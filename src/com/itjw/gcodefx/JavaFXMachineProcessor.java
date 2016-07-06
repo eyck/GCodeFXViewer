@@ -76,6 +76,10 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 		return material;
 	}
 	
+	public void initialize(){
+		gcodes.clear();
+	}
+	
 	public List<Layer> getGcodeGroup() {
 		return gcodes;
 	}
