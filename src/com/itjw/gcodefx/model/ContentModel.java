@@ -34,6 +34,7 @@ package com.itjw.gcodefx.model;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 import com.itjw.gcode.AbstractGCode;
 import com.itjw.gcodefx.Xform;
@@ -70,6 +71,9 @@ import javafx.scene.transform.Translate;
  * 3D Content Model for Viewer App. Contains the 3D scene and everything related to it: light, cameras etc.
  */
 public class ContentModel {
+
+	private static final Logger logger = Logger.getLogger(ContentModel.class.getName());
+	
 	private final int HIGHLITE_DENOM=11;
 	private final int HIGHLITE_NUMER=10;
 	private final SimpleObjectProperty<SubScene> subScene = new SimpleObjectProperty<>();

@@ -30,6 +30,7 @@
 package com.itjw.gcodefx;
 
 import java.io.IOException;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,7 +43,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class GCodeFXViewer extends Application {
-    
+
     private static MainViewController controller;
 
 	private static ContentModel contentModel =  new ContentModel();
@@ -59,6 +60,14 @@ public class GCodeFXViewer extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+		// suppress the logging output to the console
+//	    Logger rootLogger = Logger.getLogger("");
+//	    Handler[] handlers = rootLogger.getHandlers();
+//	    if (handlers[0] instanceof ConsoleHandler) {
+//	      rootLogger.removeHandler(handlers[0]);
+//	    }
+	    // and add out handler
+//	    rootLogger.addHandler(BufferedHandler.INSTANCE);
         launch(args);
     }
 

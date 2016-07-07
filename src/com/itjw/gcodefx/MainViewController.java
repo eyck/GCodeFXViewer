@@ -39,6 +39,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -90,6 +92,8 @@ import javafx.stage.FileChooser;
  */
 public class MainViewController implements Initializable {
 
+	private static final Logger logger = Logger.getLogger(MainViewController.class.getName());
+
 	private static final String COMMAND_PATTERN = "\\b([GM][0-9]+)\\b";
 	private static final String PARAMETER_PATTERN = "\\b([XYZIJEF][0-9.]+)\\b";
 	private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
@@ -118,7 +122,7 @@ public class MainViewController implements Initializable {
 	private AnchorPane settingsContainer;
 
 	private SettingsController settingsController;
-	
+
 	private final CodeArea codeArea = new CodeArea();
 
 	private SubScene subScene;
@@ -138,9 +142,10 @@ public class MainViewController implements Initializable {
 	}
 
 	JavaFXMachineProcessor jfxProcessor = new JavaFXMachineProcessor();
-	
+
 	private String inputFileName;
 
+	TextAreaStream textAreaStream;
 	/**
 	 * Initializes the controller class.
 	 *
@@ -162,8 +167,14 @@ public class MainViewController implements Initializable {
 			AnchorPane.setRightAnchor(settingsPanel, 0d);
 			AnchorPane.setBottomAnchor(settingsPanel, 0d);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, null, e);
 		}
+		// setup logging
+		textAreaStream = new TextAreaStream(getLogView());
+		Logger rootLogger = Logger.getLogger("");
+		rootLogger.addHandler(textAreaStream.getLogHandler());
+		// System.setErr(textAreaStream);    // redirect System.err
+		// System.setOut(textAreaStream);
 
 		// setup the code area 
 		codeArea.textProperty().addListener(
@@ -196,9 +207,7 @@ public class MainViewController implements Initializable {
 		codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 		codeArea.currentParagraphProperty().addListener(
 				(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue)->{
-					GCodeFXViewer.getContentModel().setHighlight(jfxProcessor.getXform4Line(newValue+1));
-					// this is the line number
-					// System.out.println("Paragraph "+newValue);
+					GCodeFXViewer.getContentModel().setHighlight(jfxProcessor.getNode4Line(newValue+1));
 				});
 		editorContainer.setContent(codeArea);
 		// setup the 3D view area
@@ -236,7 +245,7 @@ public class MainViewController implements Initializable {
 			i++;
 		}
 	}
-	
+
 	private static class GcodeParseService extends Service<List<Layer>> {
 		private final String code;
 		private final JavaFXMachineProcessor jfxProcessor;
@@ -252,9 +261,9 @@ public class MainViewController implements Initializable {
 				protected List<Layer> call() throws IOException {
 					List<AbstractGCode> gcodes = GCodeReader.parseStrings(code);
 					if(gcodes != null){
-	                    updateMessage("Generating 3D objects");
-	                    int size = gcodes.size();
-	                    int i=1;
+						updateMessage("Generating 3D objects");
+						int size = gcodes.size();
+						int i=1;
 						for(AbstractGCode gcode:gcodes){
 							updateProgress(i++, size);
 							gcode.process(jfxProcessor);
@@ -276,6 +285,7 @@ public class MainViewController implements Initializable {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void handle(WorkerStateEvent t) {
+				logger.log(Level.INFO, "File "+inputFileName+" loaded");
 				Object res = t.getSource().getValue();
 				if(res!=null && res instanceof List<?>){
 					printerSpace.getChildren().addAll((List<? extends Node>)res);
@@ -288,6 +298,7 @@ public class MainViewController implements Initializable {
 					int count = printerSpace.getChildren().size()+1;
 					settingsController.setFirstLayerValues(count, 1);
 					settingsController.setLastLayerValues(count, count);
+					logger.log(Level.INFO, "Added "+printerSpace.getChildren().size()+" layer(s)");
 				}
 			}
 		});

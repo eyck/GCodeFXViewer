@@ -30,6 +30,9 @@
 package com.itjw.gcodefx;
 
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -39,6 +42,9 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 
 public class ArcSegment extends Group {
+
+	private static final Logger logger = Logger.getLogger(ArcSegment.class.getName());
+
 	final double INCREMENT = 5d;
 	public ArcSegment(Point3D start, Point3D end, Point3D center, double width, double height, PhongMaterial material) {
 		Double rStart = center.distance(start);
@@ -48,7 +54,7 @@ public class ArcSegment extends Group {
 		s.setMaterial(material);
 		getChildren().add(s);
 		if(Math.abs(rStart-rEnd)>0.01){
-			System.out.println("ERROR: radius difference of "+Math.abs(rStart-rEnd)+" detected");
+			logger.log(Level.WARNING, "Radius difference of "+Math.abs(rStart-rEnd)+" detected");
 			Node n = Util.createSegment(start,  end,  width,  material);
 			if(n!=null){
 				Sphere e = new Sphere(width/2);

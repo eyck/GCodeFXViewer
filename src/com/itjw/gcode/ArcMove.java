@@ -30,8 +30,14 @@
 package com.itjw.gcode;
 
 import java.math.BigDecimal;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.itjw.gcodefx.MainViewController;
 
 abstract public class ArcMove extends AxisMove {
+
+	private static final Logger logger = Logger.getLogger(ArcMove.class.getName());
 
 	BigDecimal i, j, k;
 
@@ -58,7 +64,7 @@ abstract public class ArcMove extends AxisMove {
 						break;
 					}
 				} catch(java.lang.NumberFormatException exeption){
-					System.out.println("Could not parse number '"+token.substring(1)+"' in line "+lineNr);
+					logger.log(Level.SEVERE, "Could not parse number '"+token.substring(1)+"' in line "+lineNr);
 				}
 			}
 		}

@@ -33,6 +33,7 @@ package com.itjw.gcodefx;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 import org.fxmisc.richtext.CodeArea;
 
@@ -45,7 +46,6 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
@@ -60,7 +60,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
@@ -80,6 +79,9 @@ import javafx.util.StringConverter;
  * Controller class for settings panel
  */
 public class SettingsController implements Initializable {
+
+	private static final Logger logger = Logger.getLogger(SettingsController.class.getName());
+
 	private final ContentModel contentModel = GCodeFXViewer.getContentModel();
 
 	public Accordion settings;

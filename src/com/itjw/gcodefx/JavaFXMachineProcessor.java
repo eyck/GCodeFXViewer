@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import com.itjw.gcode.AbstractGCode;
 import com.itjw.gcode.IMachineProcessor;
@@ -45,6 +46,8 @@ import javafx.scene.paint.PhongMaterial;
 
 public class JavaFXMachineProcessor implements IMachineProcessor {
 
+	private static final Logger logger = Logger.getLogger(JavaFXMachineProcessor.class.getName());
+	
 	Double measureMultiplier = 1d;
 	Point3D posCur = new Point3D(0d, 0d, 0d);
 	Point3D posNew;
@@ -84,7 +87,7 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 		return gcodes;
 	}
 
-	public Node getXform4Line(Integer lineNo){
+	public Node getNode4Line(Integer lineNo){
 		return line2nodeMap.get(lineNo);
 	}
 	
