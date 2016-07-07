@@ -46,6 +46,7 @@ import javafx.scene.paint.PhongMaterial;
 
 public class JavaFXMachineProcessor implements IMachineProcessor {
 
+	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(JavaFXMachineProcessor.class.getName());
 	
 	Double measureMultiplier = 1d;

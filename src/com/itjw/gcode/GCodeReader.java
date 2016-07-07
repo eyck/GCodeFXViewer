@@ -39,8 +39,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javafx.geometry.Point3D;
-
 public class GCodeReader {
 
 	public static List<AbstractGCode> readFile(String inputfile){
@@ -70,7 +68,6 @@ public class GCodeReader {
 		String readString;
 		BufferedReader bf = new BufferedReader(reader);
 		List<AbstractGCode> gcodes=new ArrayList<>();
-		Point3D current= new Point3D(0,0,0);
 		int lineNr=1;
 		while ((readString = bf.readLine()) != null) {
 			String lineTokens[] = readString.split(";");

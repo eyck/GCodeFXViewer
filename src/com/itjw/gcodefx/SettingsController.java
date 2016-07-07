@@ -80,6 +80,7 @@ import javafx.util.StringConverter;
  */
 public class SettingsController implements Initializable {
 
+	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(SettingsController.class.getName());
 
 	private final ContentModel contentModel = GCodeFXViewer.getContentModel();

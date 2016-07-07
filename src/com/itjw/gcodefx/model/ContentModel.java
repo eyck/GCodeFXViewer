@@ -72,6 +72,7 @@ import javafx.scene.transform.Translate;
  */
 public class ContentModel {
 
+	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(ContentModel.class.getName());
 	
 	private final int HIGHLITE_DENOM=11;

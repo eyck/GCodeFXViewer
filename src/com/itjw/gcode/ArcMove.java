@@ -33,8 +33,6 @@ import java.math.BigDecimal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.itjw.gcodefx.MainViewController;
-
 abstract public class ArcMove extends AxisMove {
 
 	private static final Logger logger = Logger.getLogger(ArcMove.class.getName());
