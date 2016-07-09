@@ -43,7 +43,6 @@ import com.itjw.gcode.IMachineProcessor;
 import javafx.geometry.Point3D;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 
 public class JavaFXMachineProcessor implements IMachineProcessor {
@@ -71,10 +70,10 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 	private Integer curLineNo=0;
 	private Node curGcodeXform=null;
 	
-	final PhongMaterial whiteMaterial  = createMaterial(Color.WHITE, Color.LIGHTBLUE);
-	final PhongMaterial greyMaterial   = createMaterial(Color.GREY, Color.LIGHTGREY);
-	final PhongMaterial yellowMaterial = createMaterial(Color.YELLOW, Color.LIGHTYELLOW);
-	final PhongMaterial blueMaterial   = createMaterial(Color.BLUE, Color.LIGHTBLUE);
+	final PhongMaterial nonextrudeMaterial   = createMaterial(Color.GREY, Color.LIGHTGREY);
+	final PhongMaterial highliteMaterial = createMaterial(Color.YELLOW, Color.LIGHTYELLOW);
+//	final PhongMaterial extrudeMaterial   = createMaterial(Color.BLUE, Color.LIGHTBLUE);
+	final PhongMaterial extrudeMaterial   = createMaterial(Color.CYAN, Color.LIGHTCYAN);
 
 	HashMap<String,String> slicerParams = new HashMap<>();
 	
@@ -115,10 +114,10 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 		curGcodeXform=null;
 		if(posNew.equals(posCur)) return;
 		if(extrusion!=null && extrusion>Util.EPSILON){
-			curGcodeXform = new LinSegment(posCur, posNew, extrusionWidth, extrusionHeight, blueMaterial);
+			curGcodeXform = new LinSegment(posCur, posNew, extrusionWidth, extrusionHeight, extrudeMaterial);
 			this.extrusion=type==CoordinateType.ABSOLUTE?extrusion:this.extrusion+extrusion;
 		} else {
-			curGcodeXform = new LinSegment(posCur, posNew, nonExtrusionWidth, nonExtrusionWidth, greyMaterial);
+			curGcodeXform = new LinSegment(posCur, posNew, nonExtrusionWidth, nonExtrusionWidth, nonextrudeMaterial);
 		}
 	}
 
@@ -144,10 +143,10 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 				posCur.getY()+(cy!=null?cy:posCur.getY()),
 						posCur.getZ()+(cz!=null?cz:posCur.getZ()));
 		if(extrusion!=null && extrusion>Util.EPSILON){
-			curGcodeXform = new ArcSegment(cw?posNew:posCur, cw?posCur:posNew, center, extrusionWidth, extrusionHeight, blueMaterial);
+			curGcodeXform = new ArcSegment(cw?posNew:posCur, cw?posCur:posNew, center, extrusionWidth, extrusionHeight, extrudeMaterial);
 			this.extrusion=type==CoordinateType.ABSOLUTE?extrusion:this.extrusion+extrusion;
 		} else {
-			curGcodeXform = new ArcSegment(cw?posNew:posCur, cw?posCur:posNew, center, nonExtrusionWidth, nonExtrusionWidth, greyMaterial);
+			curGcodeXform = new ArcSegment(cw?posNew:posCur, cw?posCur:posNew, center, nonExtrusionWidth, nonExtrusionWidth, nonextrudeMaterial);
 		}
 	}
 

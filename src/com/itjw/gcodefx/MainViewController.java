@@ -73,11 +73,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point3D;
-import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
-import javafx.scene.PointLight;
 import javafx.scene.SubScene;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
@@ -87,7 +85,6 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 
 public class MainViewController implements Initializable {
@@ -234,8 +231,8 @@ public class MainViewController implements Initializable {
 			compile(code.getNewValue());
 		});
 
-		//codeArea.replaceText("G1 X230 Y25 Z0.35 F5000\nG1 X20 E25 F1000\n");
-		codeArea.replaceText("G0 F6000 X119.175 Y115.993 Z25.000\nM104 S0\nM140 S0\nG91\nG1 E-1 F300\nG1 Z+0.5 E-5 X-20 Y-20 F6000\nG28 X0 Y0\nM84\nG90\n");
+		codeArea.replaceText("G1 X230 Y25 Z0.35 F5000\nG1 X20 E25 F1000\n");
+		//codeArea.replaceText("G0 F6000 X119.175 Y115.993 Z25.000\nM104 S0\nM140 S0\nG91\nG1 E-1 F300\nG1 Z+0.5 E-5 X-20 Y-20 F6000\nG28 X0 Y0\nM84\nG90\n");
 		codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 		codeArea.currentParagraphProperty().addListener(
 				(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue)->{

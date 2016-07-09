@@ -35,7 +35,9 @@ import javafx.util.Duration;
 
 public class Frame extends Duration {
 
-    static double FPS = 24.0;
+	private static final long serialVersionUID = 5298120314487020320L;
+
+	static double FPS = 24.0;
     
     // Experimentally trying to land the frames on whole frame values
     // Duration is still double, but internally, in Animation/Timeline,

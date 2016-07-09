@@ -82,7 +82,6 @@ import javafx.util.StringConverter;
  */
 public class SettingsController implements Initializable {
 
-	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(SettingsController.class.getName());
 
 	private final ContentModel contentModel = GCodeFXViewer.getContentModel();
@@ -157,14 +156,14 @@ public class SettingsController implements Initializable {
 
 	public void setFirstLayerValues(int max, int act){
 		IntegerSpinnerValueFactory x = (IntegerSpinnerValueFactory) firstLayerSpinner.getValueFactory();
-		x.setValue(act);
 		x.setMax(max);
+		x.setValue(act);
 	}
 
 	public void setLastLayerValues(int max, int act){
 		IntegerSpinnerValueFactory x = (IntegerSpinnerValueFactory) lastLayerSpinner.getValueFactory();
-		x.setValue(max);
 		x.setMax(max);
+		x.setValue(max);
 	}
 
 	@Override public void initialize(URL location, ResourceBundle resources) {
