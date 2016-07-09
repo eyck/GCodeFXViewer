@@ -7,9 +7,13 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import com.itjw.gcodefx.TimelineDisplay?>
 
 <VBox fx:id="vboxContainer" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.itjw.gcodefx.MainViewController">
 	<children>
@@ -29,11 +33,48 @@
 				</Menu>
 			</menus>
 		</MenuBar>
-      <ToolBar prefHeight="40.0" prefWidth="200.0">
-        <items>
-          <Button mnemonicParsing="false" text="Button" />
-        </items>
-      </ToolBar>
+		<ToolBar>
+			<items>
+				<Button mnemonicParsing="false" text="Open..." onAction="#onLoadFile" />
+				<Button mnemonicParsing="false" text="Reset" onAction="#onResetPerspective" />
+				<Pane maxWidth="1.7976931348623157E308" prefHeight="-1.0" prefWidth="-1.0" HBox.hgrow="ALWAYS" />
+				<TimelineDisplay fx:id="timelineDisplay" />
+				<HBox id="playControls" prefHeight="-1.0" prefWidth="-1.0">
+					<children>
+						<Button fx:id="startBtn" mnemonicParsing="false" styleClass="left-pill" text="|&lt;">
+							<graphic>
+								<Pane prefHeight="16.0" prefWidth="16.0" />
+							</graphic>
+						</Button>
+						<Button fx:id="rwBtn" mnemonicParsing="false" styleClass="center-pill" text="&lt;&lt;">
+							<graphic>
+								<Pane prefHeight="16.0" prefWidth="16.0" />
+							</graphic>
+						</Button>
+						<ToggleButton fx:id="playBtn" mnemonicParsing="false" styleClass="center-pill" text="&gt;">
+							<graphic>
+								<Pane prefHeight="16.0" prefWidth="16.0" />
+							</graphic>
+						</ToggleButton>
+						<Button fx:id="ffBtn" mnemonicParsing="false" styleClass="center-pill" text="&gt;&gt;">
+							<graphic>
+								<Pane prefHeight="16.0" prefWidth="16.0" />
+							</graphic>
+						</Button>
+						<Button fx:id="endBtn" mnemonicParsing="false" styleClass="center-pill" text="&gt;|">
+							<graphic>
+								<Pane prefHeight="16.0" prefWidth="16.0" />
+							</graphic>
+						</Button>
+						<ToggleButton fx:id="loopBtn" mnemonicParsing="false" selected="true" styleClass="right-pill" text="R">
+							<graphic>
+								<Pane prefHeight="16.0" prefWidth="16.0" />
+							</graphic>
+						</ToggleButton>
+					</children>
+				</HBox>
+			</items>
+		</ToolBar>
 		<SplitPane dividerPositions="0.774247491638796" focusTraversable="true" orientation="VERTICAL" prefHeight="600.0" prefWidth="1024.0" VBox.vgrow="ALWAYS">
 			<items>
 				<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">

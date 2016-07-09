@@ -51,6 +51,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Point3D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Accordion;
@@ -89,6 +90,7 @@ public class SettingsController implements Initializable {
 	public ColorPicker ambientColorPicker;
 	public CheckBox showAxisCheckBox;
 	public CheckBox showViewCrossCheckBox;
+	public CheckBox showPlateCheckBox;
 	public CheckBox yUpCheckBox;
 	public Spinner<Integer> firstLayerSpinner;
 	public Spinner<Integer> lastLayerSpinner;
@@ -157,30 +159,29 @@ public class SettingsController implements Initializable {
 		x.setValue(act);
 		x.setMax(max);
 	}
-	
+
 	public void setLastLayerValues(int max, int act){
 		IntegerSpinnerValueFactory x = (IntegerSpinnerValueFactory) lastLayerSpinner.getValueFactory();
 		x.setValue(max);
 		x.setMax(max);
 	}
-		
+
 	@Override public void initialize(URL location, ResourceBundle resources) {
 		// keep one pane open always
-		settings.expandedPaneProperty().addListener(new ChangeListener<TitledPane>() {
-			@Override public void changed(ObservableValue<? extends TitledPane> observable, TitledPane oldValue, TitledPane newValue) {
-				Platform.runLater(
-						new Runnable() {
-							@Override public void run() {
-								if (settings.getExpandedPane() == null)
-									settings.setExpandedPane(settings.getPanes().get(0));
-							}
-						});
-			}
+		settings.expandedPaneProperty().addListener((ObservableValue<? extends TitledPane> observable, TitledPane oldValue, TitledPane newValue) -> {
+			Platform.runLater(
+					new Runnable() {
+						@Override public void run() {
+							if (settings.getExpandedPane() == null)
+								settings.setExpandedPane(settings.getPanes().get(0));
+						}
+					});
 		});
 		// wire up settings in OPTIONS
 		contentModel.msaaProperty().bind(msaaCheckBox.selectedProperty());
 		contentModel.showAxisProperty().bind(showAxisCheckBox.selectedProperty());
 		contentModel.showViewCrossProperty().bind(showViewCrossCheckBox.selectedProperty());
+		contentModel.plateEnabledProperty().bind(showPlateCheckBox.selectedProperty());
 		contentModel.yUpProperty().bind(yUpCheckBox.selectedProperty());
 		backgroundColorPicker.setValue((Color)contentModel.getSubScene().getFill());
 		contentModel.getSubScene().fillProperty().bind(backgroundColorPicker.valueProperty());
@@ -212,32 +213,30 @@ public class SettingsController implements Initializable {
 		light1x.disableProperty().bind(light1followCameraCheckBox.selectedProperty());
 		light1y.disableProperty().bind(light1followCameraCheckBox.selectedProperty());
 		light1z.disableProperty().bind(light1followCameraCheckBox.selectedProperty());
-		light1followCameraCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-			@Override public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-				if (newValue) {
-					contentModel.getLight1().translateXProperty().bind(new DoubleBinding() {
-						{ bind(contentModel.getCamera().boundsInParentProperty()); }
-						@Override protected double computeValue() {
-							return contentModel.getCamera().getBoundsInParent().getMinX();
-						}
-					});
-					contentModel.getLight1().translateYProperty().bind(new DoubleBinding() {
-						{ bind(contentModel.getCamera().boundsInParentProperty()); }
-						@Override protected double computeValue() {
-							return contentModel.getCamera().getBoundsInParent().getMinY();
-						}
-					});
-					contentModel.getLight1().translateZProperty().bind(new DoubleBinding() {
-						{ bind(contentModel.getCamera().boundsInParentProperty()); }
-						@Override protected double computeValue() {
-							return contentModel.getCamera().getBoundsInParent().getMinZ();
-						}
-					});
-				} else {
-					contentModel.getLight1().translateXProperty().bind(light1x.valueProperty());
-					contentModel.getLight1().translateYProperty().bind(light1y.valueProperty());
-					contentModel.getLight1().translateZProperty().bind(light1z.valueProperty());
-				}
+		light1followCameraCheckBox.selectedProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
+			if (newValue) {
+				contentModel.getLight1().translateXProperty().bind(new DoubleBinding() {
+					{ bind(contentModel.getCamera().boundsInParentProperty()); }
+					@Override protected double computeValue() {
+						return contentModel.getCamera().getBoundsInParent().getMinX();
+					}
+				});
+				contentModel.getLight1().translateYProperty().bind(new DoubleBinding() {
+					{ bind(contentModel.getCamera().boundsInParentProperty()); }
+					@Override protected double computeValue() {
+						return contentModel.getCamera().getBoundsInParent().getMinY();
+					}
+				});
+				contentModel.getLight1().translateZProperty().bind(new DoubleBinding() {
+					{ bind(contentModel.getCamera().boundsInParentProperty()); }
+					@Override protected double computeValue() {
+						return contentModel.getCamera().getBoundsInParent().getMinZ();
+					}
+				});
+			} else {
+				contentModel.getLight1().translateXProperty().bind(light1x.valueProperty());
+				contentModel.getLight1().translateYProperty().bind(light1y.valueProperty());
+				contentModel.getLight1().translateZProperty().bind(light1z.valueProperty());
 			}
 		});
 		// LIGHT 2
@@ -256,6 +255,13 @@ public class SettingsController implements Initializable {
 		contentModel.getLight3().translateXProperty().bind(light3x.valueProperty());
 		contentModel.getLight3().translateYProperty().bind(light3y.valueProperty());
 		contentModel.getLight3().translateZProperty().bind(light3z.valueProperty());
+		// wire light slider to dimension of content
+		setLightDimLimits(contentModel.getDimension());
+		contentModel.dimensionProperty().addListener((ov, o, n)->{
+			setLightDimLimits(n);
+		});
+		
+
 		// wire up settings in CAMERA
 		fovSlider.setValue(contentModel.getCamera().getFieldOfView());
 		contentModel.getCamera().fieldOfViewProperty().bind(fovSlider.valueProperty());
@@ -267,7 +273,6 @@ public class SettingsController implements Initializable {
 		contentModel.getCamera().farClipProperty().bind(new Power10DoubleBinding(farClipSlider.valueProperty()));
 
 		hierarachyTreeTable.rootProperty().bind(new ObjectBinding<TreeItem<Node>>() {
-
 			{
 				bind(contentModel.contentProperty());
 			}
@@ -437,6 +442,18 @@ public class SettingsController implements Initializable {
         sessionManager.bind(ambientEnableCheckbox.selectedProperty(), "ambientEnable");
         sessionManager.bind(settings, "settingsPane");
 		 */
+	}
+
+	protected void setLightDimLimits(Point3D n) {
+		light1x.setMax(n.getX()*2);
+		light2x.setMax(n.getX()*2);
+		light3x.setMax(n.getX()*2);
+		light1y.setMax(n.getY()*2);
+		light2y.setMax(n.getY()*2);
+		light3y.setMax(n.getY()*2);
+		light1z.setMax(n.getZ()*2);
+		light2z.setMax(n.getZ()*2);
+		light3z.setMax(n.getZ()*2);
 	}
 
 	private class TreeItemImpl extends TreeItem<Node> {

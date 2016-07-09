@@ -51,19 +51,21 @@
 					<children>
 						<Label text="Show Axis" GridPane.columnIndex="0" GridPane.rowIndex="0" />
 	                    <Label text="Show View Cross" GridPane.rowIndex="1" />
-						<Label text="Y Axis Up" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+						<Label text="Y Axis Up" GridPane.columnIndex="0" GridPane.rowIndex="3" />
 						<CheckBox fx:id="showAxisCheckBox" mnemonicParsing="true" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 	                    <CheckBox fx:id="showViewCrossCheckBox" mnemonicParsing="false" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-						<CheckBox fx:id="yUpCheckBox" mnemonicParsing="false" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-						<Label text="MSAA Antialiasing" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-						<CheckBox id="msaaCheckBox" fx:id="msaaCheckBox" mnemonicParsing="false" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-						<Label text="Background Color" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-						<ColorPicker fx:id="backgroundColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-						<Region maxHeight="1.7976931348623157E308" prefHeight="-1.0" prefWidth="-1.0" GridPane.columnIndex="0" GridPane.rowIndex="7" />
-                  		<Label text="First layer" GridPane.rowIndex="5" />
-                  		<Label text="Last layer" GridPane.rowIndex="6" />
-                  		<Spinner fx:id="firstLayerSpinner" editable="true" initialValue="1" max="100" min="1" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                  		<Spinner fx:id="lastLayerSpinner" editable="true" initialValue="1" max="100" min="1" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+						<CheckBox fx:id="yUpCheckBox" mnemonicParsing="false" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+						<Label text="MSAA Antialiasing" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+						<CheckBox id="msaaCheckBox" fx:id="msaaCheckBox" mnemonicParsing="false" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+						<Label text="Background Color" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+						<ColorPicker fx:id="backgroundColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+						<Region maxHeight="1.7976931348623157E308" prefHeight="-1.0" prefWidth="-1.0" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+                  		<Label text="First layer" GridPane.rowIndex="6" />
+                  		<Label text="Last layer" GridPane.rowIndex="7" />
+                  		<Spinner fx:id="firstLayerSpinner" editable="true" initialValue="1" max="100" min="1" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  		<Spinner fx:id="lastLayerSpinner" editable="true" initialValue="1" max="100" min="1" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                  <Label text="Show plate" GridPane.rowIndex="2" />
+                  <CheckBox fx:id="showPlateCheckBox" mnemonicParsing="false" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 					</children>
 					<columnConstraints>
 						<ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -74,6 +76,7 @@
 					</padding>
 					<rowConstraints>
 						<RowConstraints minHeight="10.0" prefHeight="-1.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
 						<RowConstraints minHeight="10.0" prefHeight="-1.0" vgrow="SOMETIMES" />
 						<RowConstraints minHeight="10.0" prefHeight="-1.0" vgrow="SOMETIMES" />
@@ -95,12 +98,12 @@
 								<Label maxWidth="1.7976931348623157E308" styleClass="settings-header" text="Ambient" GridPane.columnIndex="0" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="0" />
 								<ColorPicker fx:id="ambientColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 								<Label text="Enabled" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-								<CheckBox fx:id="ambientEnableCheckbox" mnemonicParsing="false" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+								<CheckBox fx:id="ambientEnableCheckbox" mnemonicParsing="false" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 								<Label text="Color:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
 								<ColorPicker id="ambientColorPicker" fx:id="light1ColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 								<Label maxWidth="1.7976931348623157E308" styleClass="settings-header" text="Light 1 (Camera)" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
 								<Label text="Enabled" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-								<CheckBox fx:id="light1EnabledCheckBox" mnemonicParsing="false" text="" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+								<CheckBox fx:id="light1EnabledCheckBox" mnemonicParsing="false" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 								<Label text="Lock to Camera" GridPane.columnIndex="0" GridPane.rowIndex="6" />
 								<CheckBox fx:id="light1followCameraCheckBox" mnemonicParsing="false" selected="true" text="" GridPane.columnIndex="1" GridPane.rowIndex="6" />
 								<Label text="X" GridPane.columnIndex="0" GridPane.rowIndex="7" />
@@ -121,7 +124,7 @@
 								<Label maxWidth="1.7976931348623157E308" styleClass="settings-header" text="Light 3" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="16" />
 								<Label text="Enabled" GridPane.columnIndex="0" GridPane.rowIndex="17" />
 								<CheckBox fx:id="light3EnabledCheckBox" mnemonicParsing="false" text="" GridPane.columnIndex="1" GridPane.rowIndex="17" />
-								<Label text="Lock to Camera" GridPane.columnIndex="0" GridPane.rowIndex="19" />
+								<Label text="X" GridPane.columnIndex="0" GridPane.rowIndex="19" />
 								<Slider fx:id="light3x" majorTickUnit="20.0" max="100.0" min="-100.0" minorTickCount="5" showTickLabels="true" showTickMarks="false" value="0.0" GridPane.columnIndex="1" GridPane.rowIndex="19" />
 								<Label text="Y" GridPane.columnIndex="0" GridPane.rowIndex="20" />
 								<Slider fx:id="light3y" majorTickUnit="20.0" max="100.0" min="-100.0" minorTickCount="5" showTickLabels="true" showTickMarks="false" value="0.0" GridPane.columnIndex="1" GridPane.rowIndex="20" />

@@ -58,7 +58,11 @@ import com.itjw.gcode.GCodeReader;
 import com.itjw.gcodefx.Xform.RotateOrder;
 import com.itjw.gcodefx.model.ContentModel;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application.Parameters;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -68,6 +72,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Point3D;
 import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -75,19 +80,16 @@ import javafx.scene.PerspectiveCamera;
 import javafx.scene.PointLight;
 import javafx.scene.SubScene;
 import javafx.scene.control.Accordion;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 
-/**
- * FXML Controller class
- *
- * @author Michael Hoffer &lt;info@michaelhoffer.de&gt;
- */
 public class MainViewController implements Initializable {
 
 	private static final Logger logger = Logger.getLogger(MainViewController.class.getName());
@@ -121,6 +123,21 @@ public class MainViewController implements Initializable {
 
 	private SettingsController settingsController;
 
+	@FXML
+	private TimelineDisplay timelineDisplay;
+	
+	Timeline  theTimeline = new Timeline();
+	private SimpleIntegerProperty selectedLayer = new SimpleIntegerProperty(0);
+	private SimpleIntegerProperty selectedLine = new SimpleIntegerProperty(0);
+    int animationType=1;
+
+    public Button startBtn;
+    public Button rwBtn;
+    public ToggleButton playBtn;
+    public Button ffBtn;
+    public Button endBtn;
+    public ToggleButton loopBtn;
+
 	private final CodeArea codeArea = new CodeArea();
 
 	private SubScene subScene;
@@ -143,8 +160,11 @@ public class MainViewController implements Initializable {
 
 	private String inputFileName;
 
-	TextAreaStream textAreaStream;
-	/**
+	private TextAreaStream textAreaStream;
+    
+	private TimelineController timelineController;
+
+    /**
 	 * Initializes the controller class.
 	 *
 	 * @param url
@@ -174,6 +194,24 @@ public class MainViewController implements Initializable {
 		// System.setErr(textAreaStream);    // redirect System.err
 		// System.setOut(textAreaStream);
 
+		final ContentModel contentModel = GCodeFXViewer.getContentModel();
+        // create timelineController;
+        timelineController = new TimelineController(startBtn,rwBtn,playBtn,ffBtn,endBtn,loopBtn);
+        timelineController.timelineProperty().bind(contentModel.timelineProperty());
+        timelineDisplay.timelineProperty().bind(contentModel.timelineProperty());
+        selectedLayer.addListener((ov, o, n)->{
+        	if(n!=null && n.intValue()>0){ 
+        		int i=0;
+        		for(Node node: printerSpace.getChildren()){
+        			node.setVisible(n.intValue()>i++);
+        		}
+        	}
+        });
+        selectedLine.addListener((ov, o, n)->{
+        	if(n!=null && n.intValue()>0){ 
+        		codeArea.moveTo(codeArea.position(n.intValue(), 1).toOffset());
+        	}
+        });
 		// setup the code area 
 		codeArea.textProperty().addListener(
 				(ov, oldText, newText) -> {
@@ -210,7 +248,6 @@ public class MainViewController implements Initializable {
 		editorContainer.setContent(codeArea);
 		// setup the 3D view area
 		setSubScene();
-		final ContentModel contentModel = GCodeFXViewer.getContentModel();
 		contentModel.subSceneProperty().addListener((ov, oldVal, newVal)->{
 			viewContainer.getChildren().clear();	
 			setSubScene();			
@@ -277,26 +314,53 @@ public class MainViewController implements Initializable {
 	private void compile(final String code) {
 		logView.setText("");
 		printerSpace.getChildren().clear();
+		GCodeFXViewer.getContentModel().setTimeline(null);
 		jfxProcessor.initialize();
 		GcodeParseService service = new GcodeParseService(jfxProcessor,code);
 		service.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "unchecked" })
 			@Override
 			public void handle(WorkerStateEvent t) {
 				logger.log(Level.INFO, "File "+inputFileName+" loaded");
 				Object res = t.getSource().getValue();
 				if(res!=null && res instanceof List<?>){
 					printerSpace.getChildren().addAll((List<? extends Node>)res);
-					Double dim[] = jfxProcessor.plateDimensions;
+					Point3D dim = jfxProcessor.getPlateDimensions();
 					ContentModel contentModel = GCodeFXViewer.getContentModel();
 					contentModel.setContent(printerSpace);
-					contentModel.setViewPoint(-dim[0]/2, -dim[1]/2, 0d);
-					contentModel.getCameraPosition().setZ(-dim[2]*2.5);
-					contentModel.getCameraRotate().rx.setAngle(30);
+					if(dim!=null) contentModel.setDimension(dim);
+					contentModel.resetCamera(true);
+					
 					int count = printerSpace.getChildren().size()+1;
 					settingsController.setFirstLayerValues(count, 1);
 					settingsController.setLastLayerValues(count, count);
 					logger.log(Level.INFO, "Added "+printerSpace.getChildren().size()+" layer(s)");
+					theTimeline.setCycleCount(Timeline.INDEFINITE);
+			        theTimeline.setAutoReverse(false);
+			        KeyFrame keyFrame=null;
+			        switch(animationType){
+			        case 0:{
+				        KeyValue keyValue = new KeyValue(contentModel.getCameraRotate().rz.angleProperty(), 360);
+				        keyFrame = new KeyFrame(javafx.util.Duration.seconds(30), keyValue);
+			        }
+			        break;
+			        case 1:{
+				        KeyValue keyValue = new KeyValue(selectedLayer, printerSpace.getChildren().size());
+				        keyFrame = new KeyFrame(javafx.util.Duration.seconds(printerSpace.getChildren().size()/2), keyValue);
+			        }
+			        break;
+			        case 2:{
+			        	// TODO: needs implementation
+				        KeyValue keyValue = new KeyValue(selectedLine, printerSpace.getChildren().size());
+				        keyFrame = new KeyFrame(javafx.util.Duration.seconds(printerSpace.getChildren().size()/2), keyValue);
+			        }
+			        break;
+			        default:
+				        break;	
+					}
+			        //add the keyframe to the timeline
+			        if(keyFrame!=null) theTimeline.getKeyFrames().add(keyFrame);
+			        contentModel.setTimeline(theTimeline);
 				}
 			}
 		});

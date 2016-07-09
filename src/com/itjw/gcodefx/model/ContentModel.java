@@ -45,6 +45,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
+import javafx.geometry.Point3D;
 import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -77,6 +78,10 @@ public class ContentModel {
 	
 	private final int HIGHLITE_DENOM=11;
 	private final int HIGHLITE_NUMER=10;
+	private final double AXIS_WIDTH = 0.2;
+	private final double AXIS_RADIUS = 2.0;
+	private final double THICKNESS = 1;
+
 	private final SimpleObjectProperty<SubScene> subScene = new SimpleObjectProperty<>();
 	private final SimpleObjectProperty<AbstractGCode> selectedGcode = new SimpleObjectProperty<>();
 	private final Group root3D = new Group();
@@ -89,22 +94,39 @@ public class ContentModel {
 	private final PhongMaterial redMaterial = createMaterial(Color.DARKRED, Color.RED);
 	private final PhongMaterial greenMaterial = createMaterial(Color.DARKGREEN, Color.GREEN);
 	private final PhongMaterial blueMaterial = createMaterial(Color.DARKBLUE, Color.BLUE);
+	private final PhongMaterial plateMaterial = createMaterial(Color.WHEAT, Color.LIGHTGRAY, 10d);
 	private ObjectProperty<Node> content = new SimpleObjectProperty<>();
 	private ObjectProperty<Node> highlite = new SimpleObjectProperty<>();
 	private Map<Shape3D, Material> materialMap=new HashMap<>();
 	private AutoScalingGroup autoScalingGroup = new AutoScalingGroup(2);
-	private Box xAxis, yAxis, zAxis;
 	private Box xViewCrossAxis, yViewCrossAxis, zViewCrossAxis;
+	private Group axisGroup, plateView;
 	private Sphere xSphere, ySphere, zSphere;
+	private Box xAxis, yAxis, zAxis, plate;
 	private AmbientLight ambientLight = new AmbientLight(Color.DARKGREY);
-	private PointLight light1 = new PointLight(Color.WHITE);
+	private PointLight light1 = new PointLight(Color.LIGHTGRAY);
 	private PointLight light2 = new PointLight(Color.ANTIQUEWHITE);
 	private PointLight light3 = new PointLight(Color.ALICEBLUE);
 	private final SimpleObjectProperty<Timeline> timeline = new SimpleObjectProperty<>();
 	public Timeline getTimeline() { return timeline.get(); }
 	public SimpleObjectProperty<Timeline> timelineProperty() { return timeline; }
 	public void setTimeline(Timeline timeline) { this.timeline.set(timeline); }
-	private SimpleBooleanProperty ambientLightEnabled = new SimpleBooleanProperty(false){
+	private SimpleObjectProperty<Point3D> dimension = new SimpleObjectProperty<Point3D>(new Point3D(245,245, 210)){
+		@Override protected void invalidated() {
+			updateDimension(get());
+		}
+	};
+	private SimpleBooleanProperty plateEnabled = new SimpleBooleanProperty(true){
+		@Override protected void invalidated() {
+			if (get()) {
+				if (xAxis == null) createAxes();
+				autoScalingGroup.getChildren().add(plateView);
+			} else if (xAxis != null) {
+				autoScalingGroup.getChildren().remove(plateView);
+			}
+		}
+	};
+	private SimpleBooleanProperty ambientLightEnabled = new SimpleBooleanProperty(true){
 		@Override protected void invalidated() {
 			if (get()) {
 				root3D.getChildren().add(ambientLight);
@@ -113,7 +135,7 @@ public class ContentModel {
 			}
 		}
 	};
-	private SimpleBooleanProperty light1Enabled = new SimpleBooleanProperty(false){
+	private SimpleBooleanProperty light1Enabled = new SimpleBooleanProperty(true){
 		@Override protected void invalidated() {
 			if (get()) {
 				root3D.getChildren().add(light1);
@@ -143,12 +165,10 @@ public class ContentModel {
 	private SimpleBooleanProperty showAxis = new SimpleBooleanProperty(true){
 		@Override protected void invalidated() {
 			if (get()) {
-				if (xAxis == null) createAxes();
-				autoScalingGroup.getChildren().addAll(xAxis, yAxis, zAxis);
-				autoScalingGroup.getChildren().addAll(xSphere, ySphere, zSphere);
+				if (axisGroup == null) createAxes();
+				autoScalingGroup.getChildren().add(axisGroup);
 			} else if (xAxis != null) {
-				autoScalingGroup.getChildren().removeAll(xAxis, yAxis, zAxis);
-				autoScalingGroup.getChildren().removeAll(xSphere, ySphere, zSphere);
+				autoScalingGroup.getChildren().remove(axisGroup);
 			}
 		}
 	};
@@ -204,7 +224,8 @@ public class ContentModel {
 		} else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
 			double modifier = 1.0;
 			double modifierFactor = 0.3;
-
+			picked = null;
+			
 			if (event.isAltDown()) {
 				modifier = 10.0;
 			}
@@ -234,9 +255,11 @@ public class ContentModel {
 				}
 			}
 		} else if (event.getEventType() == MouseEvent.MOUSE_RELEASED && picked!=null) {
-			AbstractGCode gcode = (AbstractGCode) picked.getUserData();
-			if(gcode==null)	gcode = (AbstractGCode)picked.getParent().getUserData();
-			selectedGcode.set(gcode);
+			if(picked!=null){
+				AbstractGCode gcode = (AbstractGCode) picked.getUserData();
+				if(gcode==null)	gcode = (AbstractGCode)picked.getParent().getUserData();
+				selectedGcode.set(gcode);
+			}
 		}
 	};
 	
@@ -362,22 +385,22 @@ public class ContentModel {
 	};
 	
 	public void resetCamera(Boolean fullReset) {
+		Point3D dim= dimension.get();
 		if (fullReset) {
 			cameraRotate.ry.setAngle(0.0);
-			cameraRotate.rx.setAngle(0.0);
+			// cameraRotate.rx.setAngle(0.0);
+			cameraRotate.rx.setAngle(30);
 			cameraRotate.rz.setAngle(0.0);
 			if (yUp.get()) {
 				yUpRotate.setAngle(180);
 			} else {
 				yUpRotate.setAngle(0);
 			}
-			cameraPosition.setZ(-cameraDistance);
+			cameraPosition.setZ(-dim.getZ()*2.5);
 		}   
 		cameraTranslate.t.setX(0d);
 		cameraTranslate.t.setY(0d);
-		contentTranslate.setX(0d);  // -
-		contentTranslate.setY(0d);  // -					
-		contentTranslate.setZ(0d);  // -					
+		setViewPoint(-dim.getX()/2, -dim.getY()/2, 0d);
 	}
 
 	public ContentModel() {
@@ -487,6 +510,18 @@ public class ContentModel {
 		return light3;
 	}
 
+	public Point3D getDimension() {
+		return dimension.get();
+	}
+
+	public SimpleObjectProperty<Point3D> dimensionProperty() {
+		return dimension;
+	}
+
+	public void setDimension(Point3D yUp) {
+		this.dimension.set(yUp);
+	}
+
 	public boolean getYUp() {
 		return yUp.get();
 	}
@@ -521,6 +556,18 @@ public class ContentModel {
 
 	public void setShowViewCross(boolean showViewCross) {
 		this.showViewCross.set(showViewCross);
+	}
+
+	public boolean getPlateEnabled() {
+		return plateEnabled.get();
+	}
+
+	public SimpleBooleanProperty plateEnabledProperty() {
+		return plateEnabled;
+	}
+
+	public void setPlateEnabled(boolean showAxis) {
+		this.plateEnabled.set(showAxis);
 	}
 
 	public AutoScalingGroup getAutoScalingGroup() {
@@ -627,17 +674,23 @@ public class ContentModel {
 	public Xform getCameraTranslate() {
 		return cameraTranslate;
 	}
+
 	private PhongMaterial createMaterial(Color diffuse, Color specular) {
-		final PhongMaterial blueMaterial = new PhongMaterial();
-		blueMaterial.setDiffuseColor(diffuse);
-		blueMaterial.setSpecularColor(specular);
-		return blueMaterial;
+		final PhongMaterial material = new PhongMaterial();
+		material.setDiffuseColor(diffuse);
+		material.setSpecularColor(specular);
+		return material;
 	}
 
+	private PhongMaterial createMaterial(Color diffuse, Color specular, Double specularPower) {
+		PhongMaterial material= createMaterial(diffuse, specular);
+		material.setSpecularPower(specularPower);
+		return material;
+	}
 	private void createViewCross(){
 		double length = 5.0;
 		double width = 0.1;
-		//double radius = 2.0;
+
 		xViewCrossAxis = new Box(length, width, width);
 		yViewCrossAxis = new Box(width, length, width);
 		zViewCrossAxis = new Box(width, width, length);
@@ -646,38 +699,55 @@ public class ContentModel {
 		zViewCrossAxis.setMaterial(blueMaterial);
 
 	}
+	
 	private void createAxes() {
-		double length = 240.0;
-		double width = 0.2;
-		double radius = 2.0;
-
-		xSphere = new Sphere(radius);
-		ySphere = new Sphere(radius);
-		zSphere = new Sphere(radius);
+		xSphere = new Sphere(AXIS_RADIUS);
+		ySphere = new Sphere(AXIS_RADIUS);
+		zSphere = new Sphere(AXIS_RADIUS);
 		xSphere.setMaterial(redMaterial);
 		ySphere.setMaterial(greenMaterial);
 		zSphere.setMaterial(blueMaterial);
 
-		xSphere.setTranslateX(length);
-		ySphere.setTranslateY(length);
-		zSphere.setTranslateZ(length);
-
-		xAxis = new Box(length, width, width);
-		xAxis.setTranslateX(length/2);
-		yAxis = new Box(width, length, width);
-		yAxis.setTranslateY(length/2);
-		zAxis = new Box(width, width, length);
-		zAxis.setTranslateZ(length/2);
+		xAxis = new Box(1, AXIS_WIDTH, AXIS_WIDTH);
+		yAxis = new Box(AXIS_WIDTH, 1, AXIS_WIDTH);
+		zAxis = new Box(AXIS_WIDTH, AXIS_WIDTH, 1);
 		xAxis.setMaterial(redMaterial);
 		yAxis.setMaterial(greenMaterial);
 		zAxis.setMaterial(blueMaterial);
+
+		plate = new Box(1, 1,THICKNESS); 
+		plate.setMaterial(plateMaterial);
+		plate.setTranslateZ(-THICKNESS/2);
+
+		updateDimension(dimension.get());
+
+		axisGroup = new Group();
+		axisGroup.getChildren().addAll(xSphere, xAxis, ySphere, yAxis, zSphere, zAxis);
+		axisGroup.getTransforms().add(contentTranslate);
 		
-		xSphere.getTransforms().add(contentTranslate);
-		ySphere.getTransforms().add(contentTranslate);
-		zSphere.getTransforms().add(contentTranslate);
-		xAxis.getTransforms().add(contentTranslate);
-		yAxis.getTransforms().add(contentTranslate);
-		zAxis.getTransforms().add(contentTranslate);
+		plateView = new Group();
+		plateView.getChildren().add(plate);
+		plateView.getTransforms().add(contentTranslate);
+	}
+	
+	protected void updateDimension(Point3D dim) {
+		Point3D dimAxis = dim.add(10, 10, 10);
+		
+		xSphere.setTranslateX(dimAxis.getX());
+		ySphere.setTranslateY(dimAxis.getY());
+		zSphere.setTranslateZ(dimAxis.getZ());
+
+		xAxis.setScaleX(dimAxis.getX());
+		xAxis.setTranslateX(dimAxis.getX()/2);
+		yAxis.setScaleY(dimAxis.getY());
+		yAxis.setTranslateY(dimAxis.getY()/2);
+		zAxis.setScaleZ(dimAxis.getZ());
+		zAxis.setTranslateZ(dimAxis.getZ()/2);
+
+		plate.setScaleX(dim.getX());
+		plate.setScaleY(dim.getY());
+		plate.setTranslateX(dim.getX()/2);
+		plate.setTranslateY(dim.getY()/2);
 	}
 
 }

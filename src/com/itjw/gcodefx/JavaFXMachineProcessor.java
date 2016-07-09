@@ -49,24 +49,25 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(JavaFXMachineProcessor.class.getName());
 	
-	Double measureMultiplier = 1d;
-	Point3D posCur = new Point3D(0d, 0d, 0d);
-	Point3D posNew;
-	Double extrusion=0d;
-	CoordinateType type=CoordinateType.ABSOLUTE;
+	private Double measureMultiplier = 1d;
+	private Point3D posCur = new Point3D(0d, 0d, 0d);
+	private Point3D posNew;
+	private Double extrusion=0d;
+	private CoordinateType type=CoordinateType.ABSOLUTE;
 	
-	Double plateDimensions[]={245.0, 245.0, 200.0};
-	Double extrusionWidth=0.6;
-	Double extrusionHeight=0.3;
-	Double nonExtrusionWidth=0.1;
+	private Point3D plateDimensions=null;
+	
+	private Double extrusionWidth=0.6;
+	private Double extrusionHeight=0.3;
+	private Double nonExtrusionWidth=0.1;
 
-	Map<Integer, Node> line2nodeMap = new TreeMap<>();
-	Map<Integer, Material> highlightedElem = new TreeMap<>();
+	private Map<Integer, Node> line2nodeMap = new TreeMap<>();
 
-	List<Layer> gcodes = new ArrayList<>();
-	Layer curLayer=null;
-	Integer curLayerNo = 0;
-	Node curGcodeXform=null;
+	private List<Layer> gcodes = new ArrayList<>();
+	private Layer curLayer=null;
+	private Integer curLayerNo = 0;
+	private Integer curLineNo=0;
+	private Node curGcodeXform=null;
 	
 	final PhongMaterial whiteMaterial  = createMaterial(Color.WHITE, Color.LIGHTBLUE);
 	final PhongMaterial greyMaterial   = createMaterial(Color.GREY, Color.LIGHTGREY);
@@ -92,6 +93,18 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 		return line2nodeMap.get(lineNo);
 	}
 	
+	public Integer getCurLayerNo() {
+		return curLayerNo;
+	}
+
+	public Integer getCurLineNo() {
+		return curLineNo;
+	}
+
+	public Point3D getPlateDimensions() {
+		return plateDimensions;
+	}
+
 	@Override
 	public void lineTo(Double x, Double y, Double z, Double extrusion) {
 		calcNewPos(x, y, z);
@@ -162,6 +175,7 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 			curGcodeXform=null;
 		}
 		if(posNew!=null) posCur=posNew;
+		curLineNo=gcode.getLineNo();
 	}
 
 }
