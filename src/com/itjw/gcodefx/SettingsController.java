@@ -33,6 +33,7 @@ package com.itjw.gcodefx;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.fxmisc.richtext.CodeArea;
@@ -218,18 +219,21 @@ public class SettingsController implements Initializable {
 				contentModel.getLight1().translateXProperty().bind(new DoubleBinding() {
 					{ bind(contentModel.getCamera().boundsInParentProperty()); }
 					@Override protected double computeValue() {
+						logger.log(Level.FINEST, "Light1 X="+contentModel.getCamera().getBoundsInParent().getMinX());
 						return contentModel.getCamera().getBoundsInParent().getMinX();
 					}
 				});
 				contentModel.getLight1().translateYProperty().bind(new DoubleBinding() {
 					{ bind(contentModel.getCamera().boundsInParentProperty()); }
 					@Override protected double computeValue() {
+						logger.log(Level.FINEST, "Light1 Y="+contentModel.getCamera().getBoundsInParent().getMinY());
 						return contentModel.getCamera().getBoundsInParent().getMinY();
 					}
 				});
 				contentModel.getLight1().translateZProperty().bind(new DoubleBinding() {
 					{ bind(contentModel.getCamera().boundsInParentProperty()); }
 					@Override protected double computeValue() {
+						logger.log(Level.FINEST, "Light1 Z="+contentModel.getCamera().getBoundsInParent().getMinZ());
 						return contentModel.getCamera().getBoundsInParent().getMinZ();
 					}
 				});

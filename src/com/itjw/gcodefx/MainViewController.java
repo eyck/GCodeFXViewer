@@ -146,11 +146,6 @@ public class MainViewController implements Initializable {
 	final Xform cameraXform =new Xform(RotateOrder.XYZ);
 	final double cameraDistance = 650;
 
-	final AmbientLight ambientLight = new AmbientLight(Color.DARKGREY);
-	final PointLight light1 = new PointLight(Color.WHITE);
-	final PointLight light2 = new PointLight(Color.ANTIQUEWHITE);
-	final PointLight light3 = new PointLight(Color.ALICEBLUE);
-
 	final Group printerSpace = new Group();
 	{
 		printerSpace.setId("printerSpace");
@@ -239,7 +234,8 @@ public class MainViewController implements Initializable {
 			compile(code.getNewValue());
 		});
 
-		codeArea.replaceText("G1 X230 Y25 Z0.35 F5000\nG1 X20 E25 F1000\n");
+		//codeArea.replaceText("G1 X230 Y25 Z0.35 F5000\nG1 X20 E25 F1000\n");
+		codeArea.replaceText("G0 F6000 X119.175 Y115.993 Z25.000\nM104 S0\nM140 S0\nG91\nG1 E-1 F300\nG1 Z+0.5 E-5 X-20 Y-20 F6000\nG28 X0 Y0\nM84\nG90\n");
 		codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 		codeArea.currentParagraphProperty().addListener(
 				(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue)->{
@@ -299,9 +295,13 @@ public class MainViewController implements Initializable {
 						updateMessage("Generating 3D objects");
 						int size = gcodes.size();
 						int i=1;
+						try{
 						for(AbstractGCode gcode:gcodes){
 							updateProgress(i++, size);
 							gcode.process(jfxProcessor);
+						}
+						} catch(Throwable t){
+							logger.log(Level.SEVERE, "Failure parsing gcode", t);
 						}
 						return (jfxProcessor.getGcodeGroup());
 					}
