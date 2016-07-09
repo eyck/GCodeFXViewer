@@ -5,6 +5,7 @@
 			<filelist>
 				<file name="${java.home}\..\lib\ant-javafx.jar"/>
 				<file name="${java.home}\lib\jfxrt.jar"/>
+				<file name="${basedir}"/>
 			</filelist>
 		</path>
 	
@@ -101,6 +102,7 @@
 		<fx:application id="fxApplication"
 			name="GCodeFXViewer"
 			mainClass="com.itjw.gcodefx.GCodeFXViewer"
+			version="1.0"
 			toolkit="fx"
 		/>
 	
