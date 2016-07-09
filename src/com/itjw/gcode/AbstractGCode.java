@@ -33,14 +33,14 @@ package com.itjw.gcode;
 public abstract class AbstractGCode{
 	String raw;
 	String[] tokens;
-	int lineNr;
+	int lineNo;
 
-	public AbstractGCode(String raw, String[] tokens, int lineNr) {
+	public AbstractGCode(String raw, String[] tokens, int lineNo) {
 		super();
 		this.raw = raw;
 		this.tokens = tokens;
-		this.lineNr = lineNr;
-		parseTokens(tokens, lineNr);
+		this.lineNo = lineNo;
+		parseTokens(tokens, lineNo);
 	}
 
 	abstract protected void parseTokens(String[] tokens, int lineNr);
@@ -50,7 +50,11 @@ public abstract class AbstractGCode{
 	}
 
 	public Integer getLineNo(){
-		return lineNr;
+		return lineNo;
+	}
+
+	public String getRaw() {
+		return raw;
 	}
 
 	abstract public Boolean process(IMachineProcessor machine);

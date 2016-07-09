@@ -94,7 +94,7 @@ public class ContentModel {
 	private final PhongMaterial redMaterial = createMaterial(Color.DARKRED, Color.RED);
 	private final PhongMaterial greenMaterial = createMaterial(Color.DARKGREEN, Color.GREEN);
 	private final PhongMaterial blueMaterial = createMaterial(Color.DARKBLUE, Color.BLUE);
-	private final PhongMaterial plateMaterial = createMaterial(Color.WHEAT, Color.LIGHTGRAY, 10d);
+	private final PhongMaterial plateMaterial = createMaterial(Color.WHEAT, Color.WHEAT, 10d);
 	private ObjectProperty<Node> content = new SimpleObjectProperty<>();
 	private ObjectProperty<Node> highlite = new SimpleObjectProperty<>();
 	private Map<Shape3D, Material> materialMap=new HashMap<>();

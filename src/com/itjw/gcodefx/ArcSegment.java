@@ -70,6 +70,7 @@ public class ArcSegment extends Group {
 				axis=new Point3D(0d, 0d, 1d);
 	        double diff = Math.atan2(dEnd.getY(), dEnd.getX())-Math.atan2(dStart.getY(), dStart.getX());
 	        Double angle =  Math.toDegrees(diff<0?(diff+2*Math.PI):diff);
+	        if(angle<Util.EPSILON) angle=360d;
 			Point3D p1=dStart;
 			for(double i=INCREMENT; i<angle; i+=INCREMENT){
 				Rotate rotate=new Rotate(i, axis);

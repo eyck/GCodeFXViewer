@@ -30,12 +30,14 @@
 package com.itjw.gcodefx;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import com.itjw.gcode.AbstractGCode;
+import com.itjw.gcode.Comment;
 import com.itjw.gcode.IMachineProcessor;
 
 import javafx.geometry.Point3D;
@@ -74,6 +76,8 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 	final PhongMaterial yellowMaterial = createMaterial(Color.YELLOW, Color.LIGHTYELLOW);
 	final PhongMaterial blueMaterial   = createMaterial(Color.BLUE, Color.LIGHTBLUE);
 
+	HashMap<String,String> slicerParams = new HashMap<>();
+	
 	private PhongMaterial createMaterial(Color diffuse, Color specular) {
 		final PhongMaterial material = new PhongMaterial();
 		material.setDiffuseColor(diffuse);
@@ -110,7 +114,7 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 		calcNewPos(x, y, z);
 		curGcodeXform=null;
 		if(posNew.equals(posCur)) return;
-		if(extrusion!=null && Math.abs(extrusion)>Util.EPSILON){
+		if(extrusion!=null && extrusion>Util.EPSILON){
 			curGcodeXform = new LinSegment(posCur, posNew, extrusionWidth, extrusionHeight, blueMaterial);
 			this.extrusion=type==CoordinateType.ABSOLUTE?extrusion:this.extrusion+extrusion;
 		} else {
@@ -119,10 +123,11 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 	}
 
 	private void calcNewPos(Double x, Double y, Double z) {
+		boolean rel = CoordinateType.RELATIVE.equals(type);
 		posNew=new Point3D(
-				x!=null?x*measureMultiplier:posCur.getX(),
-						y!=null?y*measureMultiplier:posCur.getY(),
-								z!=null?z*measureMultiplier:posCur.getZ());
+				x!=null?x*measureMultiplier+(rel?posCur.getX():0):posCur.getX(),
+						y!=null?y*measureMultiplier+(rel?posCur.getY():0):posCur.getY(),
+								z!=null?z*measureMultiplier+(rel?posCur.getZ():0):posCur.getZ());
 		if(posNew.getZ()!=posCur.getZ()){
 			curLayer=new Layer();
 			curLayer.setId("L"+curLayerNo+ " ("+posNew.getZ()+"mm)");
@@ -138,7 +143,7 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 		Point3D center = new Point3D(posCur.getX()+(cx!=null?cx:posCur.getX()),
 				posCur.getY()+(cy!=null?cy:posCur.getY()),
 						posCur.getZ()+(cz!=null?cz:posCur.getZ()));
-		if(extrusion!=null && Math.abs(extrusion)>Util.EPSILON){
+		if(extrusion!=null && extrusion>Util.EPSILON){
 			curGcodeXform = new ArcSegment(cw?posNew:posCur, cw?posCur:posNew, center, extrusionWidth, extrusionHeight, blueMaterial);
 			this.extrusion=type==CoordinateType.ABSOLUTE?extrusion:this.extrusion+extrusion;
 		} else {
@@ -174,8 +179,23 @@ public class JavaFXMachineProcessor implements IMachineProcessor {
 			line2nodeMap.put(gcode.getLineNo(), curGcodeXform);
 			curGcodeXform=null;
 		}
+		if(gcode instanceof Comment)
+			processComment(gcode);
 		if(posNew!=null) posCur=posNew;
 		curLineNo=gcode.getLineNo();
+	}
+
+	private void processComment(AbstractGCode gcode) {
+		if( gcode.getRaw().length()==0) return;
+		String lineTokens[] = gcode.getRaw().split("\\s*;\\s*");
+		// supported Slic3r parameters
+		// bed_shape = 0x0,245x0,245x245,0x245
+		// nozzle_diameter = 0.5
+		// extrusion_width = 0.6
+		if(lineTokens[1].matches("(extrusion_width|nozzle_diameter|bed_shape) = ")){
+			String params[] = lineTokens[1].trim().split("\\s*=\\s*");
+			slicerParams.put(params[0], params[1]);
+		}
 	}
 
 }

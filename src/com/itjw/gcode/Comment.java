@@ -37,6 +37,7 @@ public class Comment extends AbstractGCode {
 
 	@Override
 	public Boolean process(IMachineProcessor machine) {
+		machine.finishCommand(this);
 		return false;
 	}
 
